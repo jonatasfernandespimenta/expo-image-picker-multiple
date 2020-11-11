@@ -50,11 +50,7 @@ export default class ImageBrowser extends React.Component {
     this.setState({numColumns});
   }
 
-  getNumColumns = orientation => {
-    const isPortrait = orientation === ScreenOrientation.Orientation.PORTRAIT_UP ||
-      orientation === ScreenOrientation.Orientation.PORTRAIT_DOWN;
-    return isPortrait ? 4 : 7;
-  }
+  getNumColumns = orientation => orientation !== ScreenOrientation.Orientation.PORTRAIT_UP ? 4 : 7;
 
   selectImage = (index) => {
     let newSelected = Array.from(this.state.selected);
@@ -65,10 +61,9 @@ export default class ImageBrowser extends React.Component {
       newSelected.splice(deleteIndex, 1);
     }
     if (newSelected.length > this.props.max) return;
-    if (!newSelected) newSelected = []; 
-    this.setState({selected: newSelected}, () =>{
-      this.props.onChange(newSelected.length, this.prepareCallback());
-    });
+    if (!newSelected) newSelected = [];
+    this.setState({selected: newSelected});
+    this.props.onChange(newSelected.length, () => this.prepareCallback());
   }
 
   getPhotos = () => {
@@ -110,7 +105,10 @@ export default class ImageBrowser extends React.Component {
     this.props.callback(assetsInfo);
   }
 
-  renderImageTile = ({item, index}) => {
+  renderImageTile = ({item, index, error}) => {
+    if(item.width && item.height < 500) {
+      error=true
+    }
     const selected = this.state.selected.indexOf(index) !== -1;
     const selectedItemNumber = this.state.selected.indexOf(index) + 1;
     return (
@@ -118,6 +116,7 @@ export default class ImageBrowser extends React.Component {
         selectedItemNumber={selectedItemNumber}
         item={item}
         index={index}
+        error={error}
         selected={selected}
         selectImage={this.selectImage}
         renderSelectedComponent={this.props.renderSelectedComponent}
@@ -128,7 +127,6 @@ export default class ImageBrowser extends React.Component {
   renderPreloader = () =>  this.props.preloaderComponent || <ActivityIndicator size="large"/>;
 
   renderEmptyStay = () =>  this.props.emptyStayComponent || null;
-
   renderImages() {
     return (
       <FlatList
